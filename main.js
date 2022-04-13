@@ -40,15 +40,18 @@ var app = http.createServer(function(request,response){
                 if (err) {
                     throw err;
                 }
-                db.query("SELECT * FROM topic WHERE id = ?", [queryData.id], function(err, res) {
+                db.query(`SELECT * FROM topic LEFT JOIN author ON topic.author_id = author.id WHERE topic.id = ?`, [queryData.id], function(err, res) {
                     if (err) {
                         throw err;
                     }
+                    console.log(res[0].name);
                     var title = res[0].title;
                     var description = res[0].description;
                     var list = template.list(resAll);
                     var html = template.HTML(title, list,
-                        `<h2>${title}</h2>${description}`,
+                        `<h2>${title}</h2>
+                        ${description} 
+                        <p>by ${res[0].name}</p>`,
                         `<a href="/create">create</a> 
                          <a href="/update?id=${queryData.id}">update</a>
                          <form action="delete_process" method="post">
@@ -65,24 +68,31 @@ var app = http.createServer(function(request,response){
     }
     else if (pathName === '/create') {
         db.query(`SELECT * FROM topic`, function(error, topics){
-            var title = 'Create';
-            var list = template.list(topics);
-            var html = template.HTML(title, list,
-              `
-              <form action="/create_process" method="post">
-                <p><input type="text" name="title" placeholder="title"></p>
-                <p>
-                  <textarea name="description" placeholder="description"></textarea>
-                </p>
-                <p>
-                  <input type="submit">
-                </p>
-              </form>
-              `,
-              `<a href="/create">create</a>`
-            );
-            response.writeHead(200);
-            response.end(html);
+            db.query("SELECT * FROM author", function(err2, authors) {
+                var title = 'Create';
+                var list = template.list(topics);
+                var authorList = template.authorList(authors);
+                var html = template.HTML(title, list,
+                `<form action="/create_process" method="post">
+                    <p>
+                        <input type="text" name="title" placeholder="title"></p>
+                    <p>
+                        <textarea name="description" placeholder="description"></textarea>
+                    </p>
+                    <p>
+                        <select name='author'>
+                            ${authorList}
+                        </select>
+                    </p>
+                    <p>
+                        <input type="submit">
+                    </p>
+                </form>`,
+                `<a href="/create">create</a>`
+                );
+                response.writeHead(200);
+                response.end(html);
+            });
         });
     }
     else if (pathName === '/create_process') {
@@ -95,9 +105,10 @@ var app = http.createServer(function(request,response){
         request.on('end', function() {
             var title = new URLSearchParams(body).get('title')
             var description = new URLSearchParams(body).get('description')
+            var authorID = new URLSearchParams(body).get('author');
             db.query(`INSERT INTO topic (title, description, created, author_id) 
                 VALUES (?, ?, NOW(), ?)`,
-                [title, description, 1],
+                [title, description, authorID],
                 function(err, res) {
                     if (err) {
                         throw err
@@ -117,24 +128,35 @@ var app = http.createServer(function(request,response){
                 if (err2) {
                     throw err2
                 }
-                var list = template.list(resAll);
-                var html = template.HTML(res[0].title, list, 
-                    `<form action="/update_process" method="post">
-                        <input type="hidden" name="id" value="${res[0].id}"/>
-                        <p>
-                            <input type="text" name="title" placeholder="title" value="${res[0].title}"/>
-                        </p>
-                        <p>
-                            <textarea name="description" placeholder="description">${res[0].description}</textarea>
-                        </p>
-                        <p>
-                            <input type="submit">
-                        </p>
-                    </form>`,
-                    `<a href="/create">create</a> <a href="/update?id=${res[0].title}">update</a>`
-                );
-                response.writeHead(200);
-                response.end(html);
+                db.query("SELECT * FROM author", function(err3, authors) {
+                    if (err3) {
+                        throw err3
+                    }
+                    var list = template.list(resAll);
+                    var authorList = template.authorList(authors, res[0].author_id);
+                    var html = template.HTML(res[0].title, list, 
+                        `<form action="/update_process" method="post">
+                            <input type="hidden" name="id" value="${res[0].id}"/>
+                            <p>
+                                <input type="text" name="title" placeholder="title" value="${res[0].title}"/>
+                            </p>
+                            <p>
+                                <textarea name="description" placeholder="description">${res[0].description}</textarea>
+                            </p>
+                            <p>
+                                <select name='author'>
+                                    ${authorList}
+                                </select>
+                            </p>
+                            <p>
+                                <input type="submit">
+                            </p>
+                        </form>`,
+                        `<a href="/create">create</a> <a href="/update?id=${res[0].title}">update</a>`
+                    );
+                    response.writeHead(200);
+                    response.end(html);
+                });
             });
         })
     }
@@ -148,8 +170,9 @@ var app = http.createServer(function(request,response){
         request.on('end', function() {
             var title = new URLSearchParams(body).get('title')
             var description = new URLSearchParams(body).get('description')
+            var authorID = new URLSearchParams(body).get('author')
             var id = new URLSearchParams(body).get('id'); 
-            db.query("UPDATE topic SET title = ?, description = ? WHERE id = ?", [title, description, id], function(err, res) {
+            db.query("UPDATE topic SET title = ?, description = ?, author_id = ? WHERE id = ?", [title, description, authorID , id], function(err, res) {
                 if (err) {
                     throw err
                 }
