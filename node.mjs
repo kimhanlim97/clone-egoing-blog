@@ -1,4 +1,5 @@
 import express from 'express'
+import compression from 'compression'
 
 import { home, page } from './lib/topic.js'
 import { create, createProcess } from './lib/create.js'
@@ -10,6 +11,7 @@ const port = 3000
 
 app.use(express.json());
 app.use(express.urlencoded());
+app.use(compression());
 
 app.get('/', (req, res) => {
   home(res);
