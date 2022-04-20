@@ -3,6 +3,7 @@ import express from 'express'
 import { home, page } from './lib/topic.js'
 import { create, createProcess } from './lib/create.js'
 import { update, updateProcess } from './lib/update.js'
+import deleteProcess from './lib/delete.js'
 
 const app = express()
 const port = 3000
@@ -32,6 +33,10 @@ app.get('/update/:pageId', (req, res) => {
 
 app.post('/update', (req, res) => {
   updateProcess(res, req.body);
+})
+
+app.post('/delete', (req, res) => {
+  deleteProcess(res, req.body)
 })
 
 app.listen(port, () => {
