@@ -1,4 +1,4 @@
-import express, { request } from 'express'
+import express from 'express'
 import compression from 'compression'
 
 import db from './lib/db.js'
@@ -51,6 +51,15 @@ app.post('/update', (req, res) => {
 
 app.post('/delete', (req, res) => {
   deleteProcess(req, res);
+})
+
+app.use((req, res, next) => {
+  res.status(404).send({status: 400, message: "Sorry can't find that", type: 'client'})
+})
+
+app.use((err, req, res, next) => {
+  console.error(err.stack);
+  res.status(500).send({status: 500, message: 'internal error', type: 'server'})
 })
 
 app.listen(port, () => {
