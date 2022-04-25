@@ -6,6 +6,10 @@ import { home, page } from './lib/topic.js'
 import { create, createProcess } from './lib/create.js'
 import { update, updateProcess } from './lib/update.js'
 import deleteProcess from './lib/delete.js'
+import author from './lib/author.js'
+import createAuthorProcess from './lib/authorCreate.js'
+import { updateAuthor, updateAuthorProcess } from './lib/authorUpdate.js'
+import deleteAuthorProcess from './lib/authorDelete.js'
 
 const app = express()
 const port = 3000
@@ -51,6 +55,26 @@ app.post('/update', (req, res) => {
 
 app.post('/delete', (req, res) => {
   deleteProcess(req, res);
+})
+
+app.get('/author', (req, res) => {
+  author(req, res);
+})
+
+app.post('/author/create', (req, res) => {
+  createAuthorProcess(req, res);
+})
+
+app.get('/author/update/:authorId', (req, res) => {
+  updateAuthor(req, res);
+})
+
+app.post('/author/update', (req, res) => {
+  updateAuthorProcess(req, res);
+})
+
+app.post('/author/delete', (req, res) => {
+  deleteAuthorProcess(req, res);
 })
 
 app.use((req, res, next) => {
