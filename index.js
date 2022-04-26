@@ -1,15 +1,15 @@
-import express from 'express'
-import compression from 'compression'
+const express = require('express');
+const compression = require('compression')
 
-import db from './lib/db.js'
-import { home, page } from './lib/topic.js'
-import { create, createProcess } from './lib/create.js'
-import { update, updateProcess } from './lib/update.js'
-import deleteProcess from './lib/delete.js'
-import author from './lib/author.js'
-import createAuthorProcess from './lib/authorCreate.js'
-import { updateAuthor, updateAuthorProcess } from './lib/authorUpdate.js'
-import deleteAuthorProcess from './lib/authorDelete.js'
+const db = require('./lib/db.js')
+const topic = require('./lib/topic.js')
+const create = require('./lib/create.js')
+const update = require('./lib/update.js')
+const deleteProcess = require('./lib/delete.js')
+const author = require('./lib/author.js')
+const createAuthorProcess = require('./lib/authorCreate.js')
+const updateAuthor = require('./lib/authorUpdate.js')
+const deleteAuthorProcess = require('./lib/authorDelete.js')
 
 const app = express()
 const port = 3000
@@ -29,52 +29,51 @@ app.get('*', (req, res, next) => {
 })
 
 app.get('/', (req, res) => {
-  home(req, res);
+  topic.home(req, res);
 });
 
 app.get('/page/:pageId', (req, res) => {
-  console.log(req.topicList, req.params);
-  page(req, res);
+  topic.page(req, res);
 });
 
 app.get('/create', (req, res) => {
-  create(req, res)
+  create.create(req, res)
 })
 
 app.post('/create', (req, res) => {
-  createProcess(req, res);
+  create.createProcess(req, res);
 })
 
 app.get('/update/:pageId', (req, res) => {
-  update(req, res);
+  update.update(req, res);
 })
 
 app.post('/update', (req, res) => {
-  updateProcess(req, res);
+  update.updateProcess(req, res);
 })
 
 app.post('/delete', (req, res) => {
-  deleteProcess(req, res);
+  deleteProcess.deleteProcess(req, res);
 })
 
 app.get('/author', (req, res) => {
-  author(req, res);
+  author.author(req, res);
 })
 
 app.post('/author/create', (req, res) => {
-  createAuthorProcess(req, res);
+  createAuthorProcess.createAuthorProcess(req, res);
 })
 
 app.get('/author/update/:authorId', (req, res) => {
-  updateAuthor(req, res);
+  updateAuthor.updateAuthor(req, res);
 })
 
 app.post('/author/update', (req, res) => {
-  updateAuthorProcess(req, res);
+  updateAuthor.updateAuthorProcess(req, res);
 })
 
 app.post('/author/delete', (req, res) => {
-  deleteAuthorProcess(req, res);
+  deleteAuthorProcess.deleteAuthorProcess(req, res);
 })
 
 app.use((req, res, next) => {
