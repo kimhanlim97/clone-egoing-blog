@@ -21,7 +21,7 @@ const template =  {
     let list = '<ul>';
     let i = 0;
     while(i < filelist.length){
-      list = list + `<li><a href="/page/${filelist[i].id}">${filelist[i].title}</a></li>`;
+      list = list + `<li><a href="/post/read/${filelist[i].id}">${filelist[i].title}</a></li>`;
       i = i + 1;
     }
     list = list+'</ul>';
