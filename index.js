@@ -1,6 +1,16 @@
 const express = require('express');
 const compression = require('compression')
 
+const session = require('express-session');
+const mysqlStore = require('express-mysql-session')(session);
+const sessionStore = new mysqlStore({
+  host: 'localhost',
+  port: 3306,
+  user: 'root',
+  password: 'khlm8107',
+  database: 'opentutorials'
+})
+
 const db = require('./src/lib/template/db.js')
 const homeRouter = require('./src/routes/home.route.js')
 const postRouter = require('./src/routes/post.route.js')
@@ -11,8 +21,21 @@ const port = 3000
 
 app.use(express.static('public'));
 app.use(express.json());
-app.use(express.urlencoded());
+app.use(express.urlencoded({ extended: false }));
 app.use(compression());
+app.use(session({
+  secret: "khlm8107",
+  resave: false,
+  saveUninitialized: true,
+  store: sessionStore,
+}))
+app.use((req, res, next) => {
+  if (req.session.login === true) next();
+  else {
+    req.session.login = false; 
+    next();
+  }
+})
 app.get('*', (req, res, next) => {
   db.query("SELECT * FROM topic", (err, topicList) => {
     if (err) {
@@ -25,7 +48,7 @@ app.get('*', (req, res, next) => {
 
 app.use(homeRouter);
 app.use('/post', postRouter);
-app.use('/author', authorRouter);
+app.use('/auth', authorRouter);
 
 app.use((req, res, next) => {
   res.status(404).send({status: 400, message: "Sorry can't find that", type: 'client'})

@@ -1,5 +1,15 @@
 const template =  {
-  HTML:function(title, list, body, control){
+  HTML:function(title, list, body, control, login = false){
+    if (typeof login !== 'boolean') {
+      throw 'wrong parameter'
+    }
+    const loginFalse = `
+      <a href='/auth/login'>login</a>
+    `
+    const loginTrue = `
+      <a href='/auth/logout'>logout</a>
+      <a href='/auth'>author</a>
+    `
     return `
     <!doctype html>
     <html>
@@ -9,10 +19,10 @@ const template =  {
     </head>
     <body>
       <h1><a href="/">WEB</a></h1>
-      <a href="/author">author</a>
+      ${login ? loginTrue : loginFalse}
       ${list}
-      ${control === undefined ? '' : control}
       ${body}
+      ${login ? control : ''}
     </body>
     </html>
     `;
@@ -53,9 +63,9 @@ const template =  {
             <tr>
                 <td>${author.name}</td>
                 <td>${author.profile}</td>
-                <td><a href="/author/update/${author.id}">update</a></td>
+                <td><a href="/auth/update/${author.id}">update</a></td>
                 <td>
-                  <form action="/author/delete" method="post">
+                  <form action="/auth/delete" method="post">
                     <input type="hidden" name="id" value="${author.id}">
                     <input type="submit" value="delete">
                   </form>
