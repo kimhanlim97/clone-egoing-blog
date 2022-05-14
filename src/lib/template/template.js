@@ -1,14 +1,15 @@
 const template =  {
-  HTML:function(title, list, body, control, login = false){
-    if (typeof login !== 'boolean') {
+  HTML:function(title, list, body, control, isLogined = false){
+    if (typeof isLogined !== 'boolean') {
       throw 'wrong parameter'
     }
     const loginFalse = `
       <a href='/auth/login'>login</a>
+      <a href='/auth/register'>register</a>
     `
     const loginTrue = `
       <a href='/auth/logout'>logout</a>
-      <a href='/auth'>author</a>
+      <a href='/auth'>My Information</a>
     `
     return `
     <!doctype html>
@@ -19,10 +20,10 @@ const template =  {
     </head>
     <body>
       <h1><a href="/">WEB</a></h1>
-      ${login ? loginTrue : loginFalse}
+      ${isLogined ? loginTrue : loginFalse}
       ${list}
       ${body}
-      ${login ? control : ''}
+      ${isLogined ? control : ''}
     </body>
     </html>
     `;
@@ -37,44 +38,6 @@ const template =  {
     list = list+'</ul>';
     return list;
   },
-  authorList: function(authors, selectedID = null) {
-    var authorList = "";
-    if (selectedID === null) {
-      authors.forEach(function (author) {
-        authorList += `<option value="${author.id}">${author.name}</option>`
-      })
-    }
-    else {
-      authors.forEach(function (author) {
-        if (selectedID === author.id) {
-          authorList += `<option value="${author.id}" selected>${author.name}</option>`
-        }
-        else {
-          authorList += `<option value="${author.id}">${author.name}</option>`
-        }
-      })
-    }
-    return authorList
-  },
-  authorTable: function(authors) {
-    let authorTag = ''
-    authors.forEach(function (author) {
-        authorTag += `
-            <tr>
-                <td>${author.name}</td>
-                <td>${author.profile}</td>
-                <td><a href="/auth/update/${author.id}">update</a></td>
-                <td>
-                  <form action="/auth/delete" method="post">
-                    <input type="hidden" name="id" value="${author.id}">
-                    <input type="submit" value="delete">
-                  </form>
-                </td>
-            </tr>
-        `
-    })
-    return authorTag
-  }
 }
 
 module.exports = template

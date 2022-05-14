@@ -30,14 +30,14 @@ app.use(session({
   store: sessionStore,
 }))
 app.use((req, res, next) => {
-  if (req.session.login === true) next();
+  if (req.session.isLogined === true) next();
   else {
-    req.session.login = false; 
+    req.session.isLogined = false; 
     next();
   }
 })
 app.get('*', (req, res, next) => {
-  db.query("SELECT * FROM topic", (err, topicList) => {
+  db.query("SELECT * FROM post", (err, topicList) => {
     if (err) {
       throw err
     }

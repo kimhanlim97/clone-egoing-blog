@@ -4,7 +4,7 @@ function get(req, res) {
     const title = 'Welcome';
     const description = "Hello, Node.js";
     const list = template.list(req.topicList);
-    const login = req.session.login;
+    const login = req.session.isLogined;
 
     const html = template.HTML(title, list,
     `<h2>${title}</h2>

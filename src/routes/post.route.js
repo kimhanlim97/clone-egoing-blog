@@ -11,8 +11,8 @@ router.post('/create', postController.createProcess)
 
 router.get('/update/:pageId', postController.update)
 
-router.post('/update', postController.updateProcess)
+router.post('/update/:pageId', postController.updateProcess)
 
-router.post('/delete', postController.deleteProcess)
+router.post('/delete/:pageId', postController.deleteProcess)
 
 module.exports = router;

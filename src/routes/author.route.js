@@ -12,9 +12,11 @@ router.post('/login', authorController.loginProcess)
 
 router.get('/logout', authorController.logout)
 
-router.post('/create', authorController.createProcess)
+router.get('/register', authorController.register);
 
-router.get('/update/:authorId', authorController.update)
+router.post('/register', authorController.registerProcess);
+
+router.get('/update', authorController.update)
 
 router.post('/update', authorController.updateProcess)
 

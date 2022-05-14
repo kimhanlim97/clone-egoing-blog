@@ -1,11 +1,7 @@
 const db = require('./template/db.js')
 const template = require('./template/template.js')
-const loginValidation = require('./template/loginValidation.js')
+const validate = require('./template/validate.js')
 
-const info = {
-    id: 'rlagksfla123',
-    pw: 'khlm8107'
-}
 
 function login(req, res) {
     const title = 'Login';
@@ -24,138 +20,161 @@ function login(req, res) {
         </p>
     </form>
     `
-    , '', req.session.login)
+    , '', req.session.isLogined)
     res.send(html);
 }
 
 function loginProcess(req, res) {
+    // 4. autor.js와 post.js의 UI를 설계 및 수정한다.
+
     const id = req.body.id;
     const pw = req.body.password;
-    if (id === info.id || pw === info.pw) {
-        req.session.login = true;
-        req.session.user = id;
-        res.redirect('/');
 
-        // 0. author 테이블의 비밀번호와 아이디 항목을 추가하는 등 구조를 바꾼다
-        // 1. 회원가입 UI와 기능을 만든다
-        // 2. 위 'if (id === info.id || pw === info.pw)'문을 id와 pw를 비교하는 쿼리문으로 변경한다
-        // 3. autor.js와 post.js의 UI를 설계 및 수정한다.
-        // 4. author.js와 post.js의 수정 및 삭제 권한을 해당 사용자만 가능할 수 있게 변경한다
-    }
-    else {
-        res.send('wrong info');
-    }
+    db.query('SELECT user_id FROM author WHERE user_id = ?', [id], (err, user_id) => {
+        if (user_id[0] === undefined) res.send('ID does not exist')
+        else {
+            db.query('SELECT * FROM author WHERE user_pw = ?', [pw], (err, data) => {
+                if (data[0] === undefined) res.send('Passwords do not match')
+                else {
+                    req.session.isLogined = true;
+                    req.session.author_id = data[0].id;
+                    res.redirect('/');
+                }
+            })
+        }
+    })
 }
 
 function logout(req, res) {
-    loginValidation(res, req.session.login, () => {
+    validate.login(req, res, () => {
         req.session.regenerate(() => {
             res.redirect('/');
         });
     })
 }
 
+function register(req, res) {
+    const title = 'Register';
+    const html = template.HTML(title, '', `
+        <form action="/auth/register" method="post">
+            <p>
+                id: <input type="text" name="user_id"/>
+            </p>
+            <p>
+                pw: <input type="password" name="user_pw"/>
+            </p>
+            <p>
+                name: <input type="text" name="user_name"/>
+            </p>
+            <p>
+                <p>profile</p>
+                <textarea name="profile"></textarea>
+            </p>
+            <p>
+                <input type="submit"/>
+            </p>
+        </form>
+    `, '', req.session.isLogined)
+
+    res.send(html);
+}
+
+function registerProcess(req, res) {
+    const userId = req.body.user_id;
+    const userPw = req.body.user_pw;
+    const userName = req.body.user_name;
+    const profile = req.body.profile;
+
+    db.query('INSERT INTO author (user_id, user_pw, user_name, profile) VALUES (?, ?, ?, ?)', 
+            [userId, userPw, userName, profile], (err, result) => {
+        if (err) throw err
+        res.redirect('/auth/login')
+    })
+}
+
 function read(req, res) {
-    loginValidation(res, req.session.login, () => {
-        db.query("SELECT * FROM author", function(err, authors) {
-            if (err) {
-                throw err
-            }
-    
-            const title = "author"
-            const list = template.list(req.topicList);
-            const authorTag = template.authorTable(authors)
-            const html = template.HTML(title, list, 
+    validate.login(req, res, () => {
+        db.query('SELECT user_id, user_name, profile FROM author WHERE id = ?', [req.session.author_id], (err, data) => {
+            if (err) throw err
+
+            const title = "My Information"
+            const html = template.HTML(title, '', 
             `
-            <h2>Authors</h2>
-            <table>
-                ${authorTag}
-            </table>
-            <form action="/auth/create" method="post">
-                <p>
-                    <input type="text" name="name" placeholder="author">
-                </p>
-                <p>
-                    <textarea name="profile" placeholder="profile"></textarea>
-                </p>
-                <p>
-                    <input type="submit">
-                </p>
+            <h2>My Information</h2>
+            <p>id: ${data[0].user_id}</p>
+            <p>name: ${data[0].user_name}</p>
+            <p>profile: ${data[0].profile}</p>
+            `, `
+            <a href="/auth/update">update</a>
+            <form action="/auth/delete" method="post">
+                <input type="submit" value="delete">
             </form>
-            `, '', req.session.login);
+            `, req.session.isLogined);
+
             res.send(html);
         })
     })
 }
 
-function createProcess(req, res) {
-    loginValidation(res, req.session.login, () => {
-        const author = req.body.name;
-        const profile = req.body.profile;
-        db.query("INSERT INTO author (name, profile) VALUES (?, ?)", [author, profile], (err, data) => {
-            if (err) throw err
-            res.redirect('/auth');
-        })
-    })
-}
-
 function update(req, res) {
-    loginValidation(res, req.session.login, () => {
-        db.query("SELECT * FROM author", function(err, authors) {
+    validate.login(req, res, () => {
+        db.query('SELECT * FROM author WHERE id = ?', [req.session.author_id], (err, data) => {
             if (err) throw err
-            db.query("SELECT * FROM author WHERE id = ?", [req.params.authorId], function(err, author) {
-                if (err) throw err
-        
-                const title = "author"
-                const list = template.list(req.topicList)
-                const authorTag = template.authorTable(authors)
-                const html = template.HTML(title, list, 
-                    `
-                    <h2>Authors</h2>
-                    <table>
-                        ${authorTag}
-                    </table>
-                    <form action="/auth/update" method="post">
-                        <p>
-                            <input type="hidden" name="id" value="${req.params.authorId}">
-                        </p>
-                        <p>
-                            <input type="text" name="name" value="${author[0].name}">
-                        </p>
-                        <p>
-                            <textarea name="profile">${author[0].profile}</textarea>
-                        </p>
-                        <p>
-                            <input type="submit">
-                        </p>
-                    </form>
-                    `    
-                , '', req.session.login)
-                res.send(html);
-            })
+    
+            const title = "Update My Information"
+            const html = template.HTML(title, '', 
+            `
+            <h2>Update My Information</h2>
+            <form action="/auth/update" method="post">
+                <p>
+                    id: <input type="text" name="user_id" value="${data[0].user_id}">
+                </p>
+                <p>
+                    pw: <input type="password" name="user_pw" value="${data[0].user_pw}">
+                </p>
+                <p>
+                    name: <input type="text" name="user_name" value="${data[0].user_name}">
+                </p>
+                <p>
+                    <p>profile</p> 
+                    <textarea name="profile">${data[0].profile}</textarea>
+                </p>
+                <p>
+                    <input type="submit">
+                </p>
+            </form>
+            `    
+            , '', req.session.isLogined)
+
+            res.send(html);
         })
     })
 }
 
 function updateProcess(req, res) {
-    loginValidation(res, req.session.login, () => {
+    validate.login(req, res, () => {
         const body = req.body
-        db.query("UPDATE author SET name = ?, profile = ? WHERE id = ?", 
-            [body.name, body.profile, body.id],
-            (err, result) => {
-                if (err) throw err
-                res.redirect('/author');
-            }
-        )
+
+        db.query("UPDATE author SET user_id = ?, user_pw = ?, user_name = ?, profile = ? WHERE id = ?", 
+            [body.user_id, body.user_pw, body.user_name, body.profile, req.session.author_id], (err, result) => {
+                if (err) throw err;
+
+                res.redirect('/auth');
+        })
     })
 }
 
 function deleteProcess(req, res) {
-    loginValidation(res, req.session.login, () => {
-        db.query("DELETE FROM topic WHERE author_id = ? ", [req.body.id], (err1, result1) => {
+    validate.login(req, res, () => {
+        db.query("DELETE FROM post WHERE author_id = ?", [req.session.author_id], (err1, result1) => {
             if (err1) throw err1
-            db.query("DELETE FROM author WHERE id = ?", [req.body.id], (err2, result2) => {
-                res.redirect('/auth');
+
+            db.query("DELETE FROM author WHERE id = ?", [req.session.author_id], (err2, result2) => {
+                if (err2) throw err3
+
+                req.session.regenerate(() => {
+                    res.redirect('/auth/login');
+                });
             })
         })
     })
@@ -165,8 +184,9 @@ module.exports = {
     login,
     loginProcess,
     logout,
+    register,
+    registerProcess,
     read,
-    createProcess,
     update, 
     updateProcess,
     deleteProcess
