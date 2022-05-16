@@ -31,14 +31,13 @@ function createProcess(req, res) {
         const authorId = req.session.author_id
         
         db.query(`INSERT INTO post (title, description, created, author_id) 
-            VALUES (?, ?, NOW(), ?)`, [title, description, authorId], function(err1, result) {
+            VALUES (?, ?, NOW(), ?)`, [title, description, authorId], (err1, result) => {
                 if (err1) throw err1
 
-                // title이 아닌 post.id로 찾을 수 있는 방법 찾기
-                db.query("SELECT * FROM post WHERE title = ?", [title], (err2, data) => {
-                    if (err2) throw err2
+                const postId = result.insertId
 
-                    const postId = data[0].id
+                db.query("SELECT * FROM post WHERE id = ?", [postId], (err2, data) => {
+                    if (err2) throw err2
 
                     res.redirect(`/post/read/${postId}`);
                 })
@@ -48,7 +47,7 @@ function createProcess(req, res) {
 }
 
 function read(req, res) {
-    db.query(`SELECT * FROM post LEFT JOIN author ON post.author_id = author.id WHERE post.id = ?`, [req.params.pageId], function(err, data) {
+    db.query(`SELECT * FROM post LEFT JOIN author ON post.author_id = author.id WHERE post.id = ?`, [req.params.pageId], (err, data) => {
         if (err) throw err;
 
         const description = data[0].description;
@@ -73,7 +72,7 @@ function read(req, res) {
 function update(req, res) {
     validate.login(req, res, () => {
         validate.userMatch(req, res, () => {
-            db.query("SELECT * FROM post WHERE id = ?", [req.params.pageId], function(err, post) {
+            db.query("SELECT * FROM post WHERE id = ?", [req.params.pageId], (err, post) => {
                 if (err) throw err
     
                 const title = post[0].title
@@ -108,7 +107,7 @@ function updateProcess(req, res) {
             const title = req.body.title
             const description = req.body.description
             
-            db.query("UPDATE post SET title = ?, description = ? WHERE id = ? ", [title, description, postId], function(err, result) {
+            db.query("UPDATE post SET title = ?, description = ? WHERE id = ? ", [title, description, postId], (err, result) => {
                 if (err) throw err
 
                 res.redirect(`/post/read/${postId}`);   
@@ -122,7 +121,7 @@ function deleteProcess(req, res) {
         validate.userMatch(req, res, () => {
             const postId = req.params.pageId
 
-            db.query("DELETE FROM post WHERE id = ?", [postId], function(err, result) {
+            db.query("DELETE FROM post WHERE id = ?", [postId], (err, result) => {
                 if (err) throw err
 
                 res.redirect('/')
