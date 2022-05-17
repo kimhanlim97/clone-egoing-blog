@@ -1,8 +1,5 @@
 const template =  {
-  HTML:function(title, list, body, control, isLogined = false){
-    if (typeof isLogined !== 'boolean') {
-      throw 'wrong parameter'
-    }
+  HTML:function(title, list, body, control, req){
     const loginFalse = `
       <a href='/auth/login'>login</a>
       <a href='/auth/register'>register</a>
@@ -20,10 +17,10 @@ const template =  {
     </head>
     <body>
       <h1><a href="/">WEB</a></h1>
-      ${isLogined ? loginTrue : loginFalse}
+      ${req.user ? loginTrue : loginFalse}
       ${list}
       ${body}
-      ${isLogined ? control : ''}
+      ${req.user ? control : ''}
     </body>
     </html>
     `;

@@ -2,7 +2,6 @@ const db = require('./template/db.js')
 const template = require('./template/template.js')
 const validate = require('./template/validate.js')
 
-
 function login(req, res) {
     const title = 'Login';
     const list = template.list(req.topicList);
@@ -20,33 +19,13 @@ function login(req, res) {
         </p>
     </form>
     `
-    , '', req.session.isLogined)
+    , '', req)
     res.send(html);
-}
-
-function loginProcess(req, res) {
-    // 4. autor.js와 post.js의 UI를 설계 및 수정한다.
-
-    const id = req.body.id;
-    const pw = req.body.password;
-
-    db.query('SELECT user_id FROM author WHERE user_id = ?', [id], (err, user_id) => {
-        if (user_id[0] === undefined) res.send('ID does not exist')
-        else {
-            db.query('SELECT * FROM author WHERE user_pw = ?', [pw], (err, data) => {
-                if (data[0] === undefined) res.send('Passwords do not match')
-                else {
-                    req.session.isLogined = true;
-                    req.session.author_id = data[0].id;
-                    res.redirect('/');
-                }
-            })
-        }
-    })
 }
 
 function logout(req, res) {
     validate.login(req, res, () => {
+        req.logout();
         req.session.regenerate(() => {
             res.redirect('/');
         });
@@ -74,7 +53,7 @@ function register(req, res) {
                 <input type="submit"/>
             </p>
         </form>
-    `, '', req.session.isLogined)
+    `, '', req)
 
     res.send(html);
 }
@@ -94,7 +73,7 @@ function registerProcess(req, res) {
 
 function read(req, res) {
     validate.login(req, res, () => {
-        db.query('SELECT user_id, user_name, profile FROM author WHERE id = ?', [req.session.author_id], (err, data) => {
+        db.query('SELECT user_id, user_name, profile FROM author WHERE id = ?', [req.session.passport.user], (err, data) => {
             if (err) throw err
 
             const title = "My Information"
@@ -109,7 +88,7 @@ function read(req, res) {
             <form action="/auth/delete" method="post">
                 <input type="submit" value="delete">
             </form>
-            `, req.session.isLogined);
+            `, req);
 
             res.send(html);
         })
@@ -118,7 +97,7 @@ function read(req, res) {
 
 function update(req, res) {
     validate.login(req, res, () => {
-        db.query('SELECT * FROM author WHERE id = ?', [req.session.author_id], (err, data) => {
+        db.query('SELECT * FROM author WHERE id = ?', [req.session.passport.user], (err, data) => {
             if (err) throw err
     
             const title = "Update My Information"
@@ -144,7 +123,7 @@ function update(req, res) {
                 </p>
             </form>
             `    
-            , '', req.session.isLogined)
+            , '', req)
 
             res.send(html);
         })
@@ -156,7 +135,7 @@ function updateProcess(req, res) {
         const body = req.body
 
         db.query("UPDATE author SET user_id = ?, user_pw = ?, user_name = ?, profile = ? WHERE id = ?", 
-            [body.user_id, body.user_pw, body.user_name, body.profile, req.session.author_id], (err, result) => {
+            [body.user_id, body.user_pw, body.user_name, body.profile, req.session.passport.user], (err, result) => {
                 if (err) throw err;
 
                 res.redirect('/auth');
@@ -166,10 +145,10 @@ function updateProcess(req, res) {
 
 function deleteProcess(req, res) {
     validate.login(req, res, () => {
-        db.query("DELETE FROM post WHERE author_id = ?", [req.session.author_id], (err1, result1) => {
+        db.query("DELETE FROM post WHERE author_id = ?", [req.session.passport.user], (err1, result1) => {
             if (err1) throw err1
 
-            db.query("DELETE FROM author WHERE id = ?", [req.session.author_id], (err2, result2) => {
+            db.query("DELETE FROM author WHERE id = ?", [req.session.passport.user], (err2, result2) => {
                 if (err2) throw err3
 
                 req.session.regenerate(() => {
@@ -182,7 +161,6 @@ function deleteProcess(req, res) {
 
 module.exports = {
     login,
-    loginProcess,
     logout,
     register,
     registerProcess,

@@ -18,7 +18,7 @@ function create(req, res) {
                 <input type="submit">
             </p>
         </form>`,
-        '', req.session.isLogined);
+        '', req);
 
         res.send(html)
     });
@@ -28,7 +28,7 @@ function createProcess(req, res) {
     validate.login(req, res, () => {
         const title = req.body.title
         const description = req.body.description
-        const authorId = req.session.author_id
+        const authorId = req.user.id
         
         db.query(`INSERT INTO post (title, description, created, author_id) 
             VALUES (?, ?, NOW(), ?)`, [title, description, authorId], (err1, result) => {
@@ -63,7 +63,7 @@ function read(req, res) {
          <a href="/post/update/${req.params.pageId}">update</a>
          <form action="/post/delete/${req.params.pageId}" method="post">
              <input type="submit" value="delete">
-         </form>`, req.session.isLogined);
+         </form>`, req);
 
         res.send(html)
     })
@@ -92,7 +92,7 @@ function update(req, res) {
                         <input type="submit">
                     </p>
                     </form>`,
-                `<a href="/post/create">create</a>`, req.session.isLogined);
+                `<a href="/post/create">create</a>`, req);
     
                 res.send(html)
             });

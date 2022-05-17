@@ -1,20 +1,18 @@
 const express = require('express');
+
 const authorController = require('../lib/author.js')
 
 const router = express.Router();
 
-
-router.get('/', authorController.read)
-
 router.get('/login', authorController.login)
-
-router.post('/login', authorController.loginProcess)
 
 router.get('/logout', authorController.logout)
 
-router.get('/register', authorController.register);
+router.get('/register', authorController.register)
 
-router.post('/register', authorController.registerProcess);
+router.post('/register', authorController.registerProcess)
+
+router.get('/', authorController.read)
 
 router.get('/update', authorController.update)
 
