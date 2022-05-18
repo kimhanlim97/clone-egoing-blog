@@ -64,11 +64,21 @@ function registerProcess(req, res) {
     const userName = req.body.user_name;
     const profile = req.body.profile;
 
-    db.query('INSERT INTO author (user_id, user_pw, user_name, profile) VALUES (?, ?, ?, ?)', 
-            [userId, userPw, userName, profile], (err, result) => {
-        if (err) throw err
-        res.redirect('/auth/login')
-    })
+    db.query('SELECT user_id from author WHERE user_id = ?', [userId], (err1, userOverlap) => {
+        if (userOverlap[0]) {
+            res.send('id가 중복되었습니다')
+        }
+        else {
+            db.query('INSERT INTO author (user_id, user_pw, user_name, profile) VALUES (?, ?, ?, ?)', 
+            [userId, userPw, userName, profile], (err2, result) => {
+                if (err2) throw err2
+
+                req.login({id: result.insertId}, () => {
+                    return res.redirect('/');
+                })
+            })
+        }
+    }) 
 }
 
 function read(req, res) {
