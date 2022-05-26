@@ -1,3 +1,5 @@
+const bcrypt = require('bcrypt');
+
 const db = require('./template/db.js')
 const template = require('./template/template.js')
 const validate = require('./template/validate.js')
@@ -60,7 +62,9 @@ function register(req, res) {
 
 function registerProcess(req, res) {
     const userId = req.body.user_id;
-    const userPw = req.body.user_pw;
+    //----------- bcrypt -----------
+    const userPw = bcrypt.hashSync(req.body.user_pw, 10)
+    //----------- bcrypt -----------
     const userName = req.body.user_name;
     const profile = req.body.profile;
 

@@ -1,6 +1,8 @@
 module.exports = function (app, loginProcessURL) {
     const passport = require('passport')
     const LocalStrategy = require('passport-local').Strategy
+    const bcrypt = require('bcrypt');
+
     const db = require('./db.js');
 
     app.use(passport.initialize());
@@ -28,7 +30,8 @@ module.exports = function (app, loginProcessURL) {
                     return done(null, false, {message: 'Incorrect ID'})
                 }
                 else {
-                    if (pw !== data[0].user_pw) {
+                    const pwMatch = bcrypt.compareSync(password, data[0].user_pw)
+                    if (!pwMatch) {
                         return done(null, false, {message: 'Incorrect PW'})
                     }
                     else {
